@@ -14,31 +14,25 @@ import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Set preferred orientations
   SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  
+
   // Initialize Hive
   // await Hive.initFlutter();
-  // await initRequestService(); 
-  
+  // await initRequestService();
+
   // // Initialize UserProvider early
   // final userProvider = UserProvider();
   // await userProvider.initHive();
-  
+
   // // Initialize app services
   // final notificationService = NotificationService();
   // notificationService.registerAsGlobal();
   // QuoteService.initializeQuotes();
-  
-  runApp(
-  
-     MyApp(),
-    
-  );
+
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
@@ -48,14 +42,14 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-    
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Lodgix',
       theme: Lodgix.lightTheme,
       darkTheme: Lodgix.darkTheme,
       themeMode: themeProvider.themeMode,
-      home: SplashScreen(), 
+      home: SplashScreen(),
       // routes: {
       //   '/dashboard': (context) => Dashboard(),
       //   '/login': (context) => Login(),

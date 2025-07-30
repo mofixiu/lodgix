@@ -9,9 +9,9 @@ class SplashScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SplashView(
-        backgroundColor: Colors.white,
+        backgroundColor: Color.fromRGBO(243, 242, 239, 1.0),
         logo: Image.asset(
-          "assets/images/otaku.jpg",
+          "assets/images/lodgix splash.png",
           width: 150,
           height: 150,
           fit: BoxFit.contain,
