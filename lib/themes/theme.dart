@@ -9,7 +9,9 @@ class Lodgix {
   static const Color darkBorderColor = Color(0xFF4B5563);
   static const Color darkButtonBackground = Color(0xFF334155);
   
-  static const Color lightBackground = Color.fromRGBO(252, 242, 232, 1);
+  // static const Color lightBackground = Color.fromRGBO(252, 242, 232, 1);
+    static const Color lightBackground = Colors.white;
+
   static const Color lightCardBackground = Color.fromRGBO(252, 242, 232, 1);
   static const Color lightAppBarBackground = Color.fromRGBO(255, 249, 233, 1);
   static const Color lightBorderColor = Colors.black;

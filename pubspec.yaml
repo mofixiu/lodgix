@@ -54,6 +54,7 @@ dependencies:
   step_progress_indicator: ^1.0.2
   timezone: ^0.9.2
   json_annotation: ^4.9.0
+  google_fonts: ^6.2.1
 
 dev_dependencies:
   flutter_test:

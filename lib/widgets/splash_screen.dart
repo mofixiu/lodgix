@@ -1,26 +1,60 @@
 import 'package:flutter/material.dart';
-import 'package:lodgix/screens/login.dart';
-import 'package:splash_view/splash_view.dart';
+import 'package:lodgix/screens/loginOrSignUp.dart';
 
-class SplashScreen extends StatelessWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
+
+  @override
+  State<SplashScreen> createState() => _SplashScreenState();
+}
+
+class _SplashScreenState extends State<SplashScreen>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _controller = AnimationController(
+      duration: const Duration(seconds: 2),
+      vsync: this,
+    );
+
+    _animation = CurvedAnimation(
+      parent: _controller,
+      curve: Curves.easeIn,
+    );
+
+    _controller.forward();
+
+    // Navigate to Login after 2 seconds
+    Future.delayed(const Duration(seconds: 2), () {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (_) => const LoginOrSignUp()),
+      );
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SplashView(
-        backgroundColor: Color.fromRGBO(243, 242, 239, 1.0),
-        logo: Image.asset(
+      backgroundColor: Color.fromRGBO(243, 242, 239, 1.0), 
+      body: Center(
+        child: Image.asset(
           "assets/images/lodgix splash.png",
-          width: 150,
-          height: 150,
+          width: 300,
+          height: 300,
           fit: BoxFit.contain,
         ),
-        done:  Done(
-         Login(), 
-        ),
-        duration: const Duration(milliseconds: 3000),
-       
       ),
     );
   }

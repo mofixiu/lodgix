@@ -1,16 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-// import 'package:hive_flutter/hive_flutter.dart';
-import 'package:lodgix/providers/theme_provider.dart';
-import 'package:lodgix/themes/theme.dart';
-import 'package:lodgix/widgets/splash_screen.dart';
-// import 'package:lodgix/providers/user_provider.dart';
-// import 'package:lodgix/screens/entryScreens/loginPage.dart';
-// import 'package:lodgix/screens/normalMode/dashboard.dart';
-// import 'package:lodgix/screens/request.dart';
-// import 'package:lodgix/shared/quote_service.dart';
-// import 'package:lodgix/widgets/splash_screen.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'providers/theme_provider.dart';
+import 'widgets/splash_screen.dart';
+import 'themes/theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -19,20 +13,13 @@ void main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  // Initialize Hive
-  // await Hive.initFlutter();
-  // await initRequestService();
-
-  // // Initialize UserProvider early
-  // final userProvider = UserProvider();
-  // await userProvider.initHive();
-
-  // // Initialize app services
-  // final notificationService = NotificationService();
-  // notificationService.registerAsGlobal();
-  // QuoteService.initializeQuotes();
-
-  runApp(MyApp());
+  runApp(
+    // Wrap the entire app with ChangeNotifierProvider
+    ChangeNotifierProvider(
+      create: (context) => ThemeProvider(),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -40,20 +27,21 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final themeProvider = Provider.of<ThemeProvider>(context);
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
-
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Lodgix',
-      theme: Lodgix.lightTheme,
-      darkTheme: Lodgix.darkTheme,
-      themeMode: themeProvider.themeMode,
-      home: SplashScreen(),
-      // routes: {
-      //   '/dashboard': (context) => Dashboard(),
-      //   '/login': (context) => Login(),
-      // },
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        return MaterialApp(
+          title: 'Lodgix',
+          theme: Lodgix.lightTheme.copyWith(
+            textTheme: GoogleFonts.montserratTextTheme(Lodgix.lightTheme.textTheme),
+          ),
+          darkTheme: Lodgix.darkTheme.copyWith(
+            textTheme: GoogleFonts.montserratTextTheme(Lodgix.darkTheme.textTheme),
+          ),
+          themeMode: themeProvider.themeMode,
+          home: const SplashScreen(),
+          debugShowCheckedModeBanner: false,
+        );
+      },
     );
   }
 }
