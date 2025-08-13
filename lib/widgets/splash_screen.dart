@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:lodgix/screens/loginOrSignUp.dart';
+import 'package:lodgix/screens/login.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({Key? key}) : super(key: key);
@@ -33,7 +33,7 @@ class _SplashScreenState extends State<SplashScreen>
     Future.delayed(const Duration(seconds: 2), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const LoginOrSignUp()),
+        MaterialPageRoute(builder: (_) => const Login()),
       );
     });
   }
