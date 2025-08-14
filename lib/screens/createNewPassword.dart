@@ -1,123 +1,54 @@
 import 'package:flutter/material.dart';
-import 'package:lodgix/screens/basicInfo.dart';
+import 'package:lodgix/screens/dashboard.dart';
 import 'package:lodgix/themes/theme.dart';
 import 'package:lodgix/widgets/customButton.dart';
 
-class SignUp extends StatefulWidget {
-  const SignUp({super.key});
+class CreateNewPassword extends StatefulWidget {
+  const CreateNewPassword({super.key});
 
   @override
-  State<SignUp> createState() => _SignUpState();
+  State<CreateNewPassword> createState() => _CreateNewPasswordState();
 }
 
-class _SignUpState extends State<SignUp> {
-  bool _isPasswordVisible = false;
+class _CreateNewPasswordState extends State<CreateNewPassword> {
+    bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   final TextEditingController passwordController = TextEditingController();
   final TextEditingController confirmPasswordController =
       TextEditingController();
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SingleChildScrollView(
-        scrollDirection: Axis.vertical,
-        child: Column(
-          children: [
-            Image.asset(
-              "assets/images/loginImage.png",
-              width: MediaQuery.of(context).size.width,
-              height: 250,
-              fit: BoxFit.cover,
-            ),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-            Text(
-              "Navigate the World, \n Book Your Bliss",
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.bold,
-                color: Lodgix.lightBorderColor,
+    return  Scaffold(
+      appBar: AppBar(
+        leading: IconButton(
+          icon: Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text('Forgot Password', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Lodgix.darkCardBackground)),
+      ),
+      body: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Image.asset(
+                'assets/images/lock.png',
+                height: MediaQuery.of(context).size.height * 0.3,
               ),
-              textAlign: TextAlign.center,
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Create your new password",
+            style: TextStyle(
+              fontSize: 17.5,
+              color: Colors.black,
             ),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Divider(color: Lodgix.darkBorderColor, thickness: 1),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      "Sign Up ",
-                      style: TextStyle(
-                        fontSize: 19,
-                        fontWeight: FontWeight.w500,
-                        color: Lodgix.darkBorderColor,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Divider(color: Lodgix.darkBorderColor, thickness: 1),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.03),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.grey[300]!, width: 1),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(0.1),
-                      spreadRadius: 1,
-                      blurRadius: 3,
-                      offset: Offset(0, 1),
-                    ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16.0,
-                    vertical: 4.0,
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.email_outlined,
-                        color: Colors.grey[600],
-                        size: 20,
-                      ),
-                      SizedBox(width: 12),
-                      Expanded(
-                        child: TextField(
-                          decoration: InputDecoration(
-                            hintText: "Enter Email Address",
-                            hintStyle: TextStyle(
-                              color: Lodgix.darkBorderColor,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w400,
-                            ),
-                            border: InputBorder.none,
-                          ),
-                          keyboardType: TextInputType.emailAddress,
-                          style: TextStyle(fontSize: 16, color: Colors.black87),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-                        SizedBox(height: MediaQuery.of(context).size.height * 0.03),
-
-            Padding(
+          ),
+        
+          const SizedBox(height: 24),
+          Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Container(
                 decoration: BoxDecoration(
@@ -259,98 +190,128 @@ class _SignUpState extends State<SignUp> {
                 ),
               ),
             ),
-
+          
+          Spacer(),
             Padding(
               padding: const EdgeInsets.all(20.0),
               child: CustomButton(
                 ontap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => Basicinfo()),
+                  showDialog(
+                    context: context,
+                    barrierDismissible: false,
+                    builder: (context) => congratulationsModal(context),
                   );
                 },
-                data: "Create Account",
+                data: "Continue",
                 textcolor: Colors.white,
                 backgroundcolor: Color(0xFF0A3D62),
                 width: MediaQuery.of(context).size.width,
                 height: 50,
               ),
             ),
-                        SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-
-             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Divider(color: Lodgix.darkBorderColor, thickness: 1),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Text(
-                      "or",
-                      style: TextStyle(
-                        fontSize: 19,
-                        fontWeight: FontWeight.w500,
-                        color: Lodgix.darkBorderColor,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Divider(color: Lodgix.darkBorderColor, thickness: 1),
-                  ),
-                ],
-              ),
-            ),
-            Text("Already have an account? Sign In",
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.black,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-
-            SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-            Text(
-              "By Continuing, you agree to our",
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.black,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            SizedBox(height: MediaQuery.of(context).size.height * 0.005),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  "Terms of Service",
-                  style: TextStyle(
-                    fontSize: 14,
-                    decoration: TextDecoration.underline,
-                    decorationColor: Colors.black,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                SizedBox(width: 4),
-                SizedBox(width: 4),
-                Text(
-                  "Privacy Policy",
-                  style: TextStyle(
-                    fontSize: 14,
-                    decoration: TextDecoration.underline,
-                    decorationColor: Colors.black,
-                    color: Colors.black,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-            SizedBox(height: 20),
-          ],
-        ),
+           SizedBox(height: MediaQuery.of(context).size.height * 0.01),
+        ],
       ),
     );
   }
+}
+Widget congratulationsModal(BuildContext context) {
+  return Dialog(
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+    backgroundColor: Colors.white,
+    child: Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              Positioned(
+                top: 0,
+                child: CircleAvatar(radius: 6, backgroundColor: Color(0xFF0A3D62)),
+              ),
+              Positioned(
+                left: 0,
+                top: 40,
+                child: CircleAvatar(radius: 10, backgroundColor: Color(0xFF0A3D62)),
+              ),
+              Positioned(
+                right: 0,
+                top: 40,
+                child: CircleAvatar(radius: 8, backgroundColor: Color(0xFF0A3D62)),
+              ),
+              Positioned(
+                left: 20,
+                bottom: 0,
+                child: CircleAvatar(radius: 7, backgroundColor: Color(0xFF0A3D62)),
+              ),
+              Positioned(
+                right: 20,
+                bottom: 0,
+                child: CircleAvatar(radius: 5, backgroundColor: Color(0xFF0A3D62)),
+              ),
+              Container(
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: Color(0xFF0A3D62),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: Icon(Icons.check_box, color: Colors.white, size: 48),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 32),
+          Text(
+            "Congratulations !",
+            style: TextStyle(
+              color: Color(0xFF0A3D62),
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            "Your account is ready to use",
+            style: TextStyle(
+              color: Colors.black87,
+              fontSize: 16,
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 32),
+          SizedBox(
+            width: double.infinity,
+            height: 50,
+            child: ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop(); // Close the dialog
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const Dashboard()),
+                );
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Color(0xFF0A3D62),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
+              child: Text(
+                "Go to Homepage",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 17,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }

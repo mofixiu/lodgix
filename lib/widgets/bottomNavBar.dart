@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:lodgix/screens/bookedScreen.dart';
+import 'package:lodgix/screens/bookmarks.dart';
 import 'package:lodgix/screens/dashboard.dart';
 import 'package:lodgix/screens/profile_screen.dart';
-import 'package:lodgix/screens/savedScreen.dart';
 import 'package:lodgix/themes/theme.dart'; 
 
 class BottomNavBar extends StatelessWidget {
@@ -23,7 +23,7 @@ class BottomNavBar extends StatelessWidget {
         nextPage = const Booked();
         break;
       case 2:
-        nextPage = const Saved();
+        nextPage = const Bookmarks();
         break;
       case 3:
         nextPage = const Profile();

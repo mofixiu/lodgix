@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lodgix/screens/dashboard.dart';
+import 'package:lodgix/screens/forgotPassword.dart';
 import 'package:lodgix/screens/signup.dart';
 import 'package:lodgix/themes/theme.dart';
 import 'package:lodgix/widgets/customButton.dart';
@@ -180,12 +181,22 @@ class _LoginState extends State<Login> {
               ),
             ),
             SizedBox(height: MediaQuery.of(context).size.height * 0.003),
-            Text(
-              "Forgot Password?",
-              style: TextStyle(
-                fontSize: 14,
-                color: Color(0xFF0A3D62),
-                fontWeight: FontWeight.bold,
+            GestureDetector(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ForgotPassword(),
+                  ),
+                );
+              },
+              child: Text(
+                "Forgot Password?",
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF0A3D62),
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             SizedBox(height: MediaQuery.of(context).size.height * 0.01),
