@@ -30,13 +30,19 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
   @override
   void initState() {
     super.initState();
-    _currentImagePath = widget.initialImagePath;
+    if (widget.initialImagePath != null) {
+      _currentImagePath = widget.initialImagePath;
+    }
   }
 
   Future<void> _pickImage() async {
     try {
       if (widget.allowMultiple) {
-        final List<XFile> images = await _picker.pickMultiImage();
+        final List<XFile> images = await _picker.pickMultiImage(
+          maxWidth: 1024,
+          maxHeight: 1024,
+          imageQuality: 85,
+        );
         if (images.isNotEmpty) {
           setState(() {
             _selectedImages = images;
@@ -60,10 +66,9 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
         }
       }
     } catch (e) {
-      // Handle error
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error picking image: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error picking image: $e')),
+      );
     }
   }
 
@@ -83,10 +88,9 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
         widget.onImagesSelected([image]);
       }
     } catch (e) {
-      // Handle error
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('Error taking photo: $e')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error taking photo: $e')),
+      );
     }
   }
 
@@ -139,61 +143,60 @@ class _ImagePickerWidgetState extends State<ImagePickerWidget> {
         border: Border.all(color: Colors.grey.shade300),
         borderRadius: BorderRadius.circular(8),
       ),
-      child:
-          _currentImagePath != null
-              ? Stack(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.file(
-                      File(_currentImagePath!),
-                      width: double.infinity,
-                      height: double.infinity,
-                      fit: BoxFit.cover,
+      child: _currentImagePath != null
+          ? Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(
+                    File(_currentImagePath!),
+                    width: double.infinity,
+                    height: double.infinity,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                Positioned(
+                  top: 4,
+                  right: 4,
+                  child: GestureDetector(
+                    onTap: _removeImage,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 16,
+                      ),
                     ),
                   ),
-                  Positioned(
-                    top: 4,
-                    right: 4,
-                    child: GestureDetector(
-                      onTap: _removeImage,
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: const BoxDecoration(
-                          color: Colors.red,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.close,
-                          color: Colors.white,
-                          size: 16,
-                        ),
-                      ),
+                ),
+              ],
+            )
+          : InkWell(
+              onTap: _showImageSourceDialog,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.add_a_photo,
+                    size: 32,
+                    color: Colors.grey.shade600,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Add Photo',
+                    style: TextStyle(
+                      color: Colors.grey.shade600,
+                      fontSize: 12,
                     ),
                   ),
                 ],
-              )
-              : InkWell(
-                onTap: _showImageSourceDialog,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Icon(
-                      Icons.add_a_photo,
-                      size: 32,
-                      color: Colors.grey.shade600,
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Add Photo',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontSize: 12,
-                      ),
-                    ),
-                  ],
-                ),
               ),
+            ),
     );
   }
 }

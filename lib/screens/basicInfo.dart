@@ -1,11 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:lodgix/screens/otpScreen.dart';
+import 'package:lodgix/screens/otp_verification.dart';
+import 'package:lodgix/services/guest_service.dart';
 import 'package:lodgix/themes/theme.dart';
 import 'package:lodgix/widgets/image_picker_widget.dart';
 import 'package:image_picker/image_picker.dart';
 
 class Basicinfo extends StatefulWidget {
-  const Basicinfo({super.key});
+  final String email;
+  final String password;
+
+  const Basicinfo({
+    Key? key,
+    required this.email,
+    required this.password,
+  }) : super(key: key);
 
   @override
   State<Basicinfo> createState() => _BasicinfoState();
@@ -17,16 +25,94 @@ class _BasicinfoState extends State<Basicinfo> {
     setState(() {
       _selectedIDDocuments = images;
     });
-    print("Documents selected: ${images.length}"); // Add this for debugging
+    print("Documents selected: ${images.length}");
   }
 
   final TextEditingController fullNameController = TextEditingController();
   final TextEditingController phoneNumberController = TextEditingController();
-  final TextEditingController passwordController = TextEditingController();
-  final TextEditingController confirmPasswordController =
-      TextEditingController();
+  bool _isLoading = false;
+
   final TextEditingController addressController = TextEditingController();
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+    @override
+
+void dispose() {
+    fullNameController.dispose();
+    phoneNumberController.dispose();
+    addressController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submitRegistration() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    // Check if ID document is selected
+    if (_selectedIDDocuments.isEmpty) {
+      _showErrorSnackBar('Please upload your ID document');
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      print('=== STARTING REGISTRATION ===');
+      print('Email: ${widget.email}');
+      print('Full Name: ${fullNameController.text.trim()}');
+      print('Phone: ${phoneNumberController.text.trim()}');
+      print('Address: ${addressController.text.trim()}');
+      print('ID Documents: ${_selectedIDDocuments.length}');
+
+      final response = await GuestService.registerGuest(
+        fullName: fullNameController.text.trim(),
+        email: widget.email,
+        password: widget.password,
+        phoneNumber: phoneNumberController.text.trim(),
+        address: addressController.text.trim(),
+        idDocument: _selectedIDDocuments.isNotEmpty ? _selectedIDDocuments.first : null,
+      );
+
+      print('=== REGISTRATION RESPONSE ===');
+      print('Response: $response');
+
+      if (response != null && response['status'] == 'success') {
+        print('Registration successful, navigating to OTP verification');
+        // Navigate to OTP verification
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => OTPVerification(
+              email: widget.email,
+              fullName: fullNameController.text.trim(),
+            ),
+          ),
+        );
+      } else {
+        final errorMessage = response?['message'] ?? 'Registration failed';
+        print('Registration failed: $errorMessage');
+        _showErrorSnackBar(errorMessage);
+      }
+    } catch (e) {
+      print('Registration error: $e');
+      _showErrorSnackBar('Failed to register. Please check your internet connection and try again.');
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: Colors.red,
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -360,20 +446,14 @@ class _BasicinfoState extends State<Basicinfo> {
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate() &&
-                          _selectedIDDocuments.isNotEmpty) {
-                        // Proceed to OTP screen
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => OTP()),
-                        );
+                    onPressed: _isLoading ? null : () async {
+                      if (_formKey.currentState!.validate()) {
+                        await _submitRegistration();
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text(
-                              "Please fill all fields and upload ID document",
-                            ),
+                            content: Text("Please fill all required fields"),
+                            backgroundColor: Colors.red,
                           ),
                         );
                       }

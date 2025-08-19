@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:lodgix/screens/bookmarks.dart';
+import 'package:lodgix/screens/payment.dart';
 import 'package:lodgix/themes/theme.dart';
 import 'package:lodgix/widgets/bottomNavBar.dart';
-
+  
 const primaryColor = Color(0xFF0A3D62);
 
 class Hotel {
@@ -51,79 +52,25 @@ class Booked extends StatefulWidget {
 }
 
 class _BookedState extends State<Booked> {
-  List<Map<String, dynamic>> hotelsData = [
-    // Your existing hotel data
-    {
-      'name': 'Grand Plaza Hotel',
-      'location': 'Victoria Island, Lagos',
-      'rating': 4.8,
-      'price': 85000,
-      'image': 'assets/images/raddison.png',
-    },
-    {
-      'name': 'Luxury Suites Abuja',
-      'location': 'Maitama, Abuja',
-      'rating': 4.6,
-      'price': 75000,
-      'image': 'assets/images/1.png',
-    },
-    {
-      'name': 'Ocean View Resort',
-      'location': 'Lekki, Lagos',
-      'rating': 4.9,
-      'price': 120000,
-      'image': 'assets/images/2.png',
-    },
-    {
-      'name': 'City Center Inn',
-      'location': 'Ikeja, Lagos',
-      'rating': 4.3,
-      'price': 45000,
-      'image': 'assets/images/3.png',
-    },
-    {
-      'name': 'Presidential Villa',
-      'location': 'Asokoro, Abuja',
-      'rating': 4.7,
-      'price': 95000,
-      'image': 'assets/images/4.png',
-    },
-    {
-      'name': 'Boutique Hotel Lagos',
-      'location': 'Ikoyi, Lagos',
-      'rating': 4.5,
-      'price': 68000,
-      'image': 'assets/images/5.png',
-    },
-    {
-      'name': 'Garden Paradise',
-      'location': 'Garki, Abuja',
-      'rating': 4.4,
-      'price': 55000,
-      'image': 'assets/images/6.png',
-    },
-    {
-      'name': 'Skyline Tower Hotel',
-      'location': 'Maryland, Lagos',
-      'rating': 4.6,
-      'price': 78000,
-      'image': 'assets/images/raddison.png',
-    },
-    {
-      'name': 'Royal Court Suites',
-      'location': 'Wuse 2, Abuja',
-      'rating': 4.8,
-      'price': 89000,
-      'image': 'assets/images/raddison.png',
-    },
-    {
-      'name': 'Beachfront Resort',
-      'location': 'Ajah, Lagos',
-      'rating': 4.2,
-      'price': 65000,
-      'image': 'assets/images/raddison.png',
-    },
-  ];
+  List<Map<String, dynamic>> get hotelsData {
+    // Get booked hotels from the manager and combine with sample data
+    List<Map<String, dynamic>> bookedHotels = BookedHotelsManager.getBookedHotels();
+    
+    // If no booked hotels, show sample data
+    if (bookedHotels.isEmpty) {
+      return [
+        {
+          'name': 'No bookings yet',
+          'location': 'Start booking hotels to see them here',
+          'rating': 0.0,
+          'price': 0,
+          'image': 'assets/images/raddison.png',
+        },
+      ];
+    }
+    
+    return bookedHotels;
+  }
 
   // Convert hotel data to Hotel objects
   List<Hotel> get hotels => hotelsData.map((map) => Hotel.fromMap(map)).toList();

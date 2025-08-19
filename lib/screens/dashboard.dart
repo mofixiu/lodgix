@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:lodgix/providers/user_provider.dart';
 import 'package:lodgix/screens/bookmarks.dart';
+import 'package:lodgix/screens/hotel_details.dart';
 import 'package:lodgix/screens/hotel_search_screen.dart';
+import 'package:lodgix/screens/login.dart';
 import 'package:lodgix/themes/theme.dart';
 import 'package:lodgix/widgets/bottomNavBar.dart';
+import 'package:provider/provider.dart';
 
 class Dashboard extends StatefulWidget {
   const Dashboard({super.key});
@@ -20,7 +24,34 @@ class _DashboardState extends State<Dashboard> {
     super.dispose();
   }
 
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus();
+  }
 
+  void _checkLoginStatus() {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+
+    // Debug: Print user data
+    print('=== DASHBOARD LOGIN CHECK ===');
+    print('Is logged in: ${userProvider.isLoggedIn}');
+    print('Username: ${userProvider.username}');
+    print('Email: ${userProvider.email}');
+    print('Full Name: ${userProvider.fullName}');
+    print('Token: ${userProvider.token}');
+    print('===========================');
+
+    if (!userProvider.isLoggedIn) {
+      // Redirect to login if not logged in
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => Login()),
+        );
+      });
+    }
+  }
 
   List<Map<String, dynamic>> cities = [
     {'name': 'Lagos', 'image': 'assets/images/city.png'},
@@ -109,582 +140,503 @@ class _DashboardState extends State<Dashboard> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.all(15.0),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.vertical,
-            physics: BouncingScrollPhysics(),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      children: [
-                        Text(
-                          " Current Location",
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Lodgix.getTextColor(context),
-                          ),
+    final userProvider = Provider.of<UserProvider>(context);
+    return Scaffold(
+      body: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: 24),
+              Row(
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '   Current Location',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
                         ),
-                        SizedBox(
-                          height: MediaQuery.of(context).size.height * 0.005,
-                        ),
-            
-                        Row(
-                          children: [
-                            Icon(
-                              Icons.location_pin,
-                              color: Lodgix.getButtonColor(context),
-                              size: 20,
-                            ),
-                            SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.005,
-                            ),
-                            Text(
-                              "Lagos, Nigeria",
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Lodgix.getButtonColor(context),
-                              ),
-                            ),
-                          ],
-                        ),
-                          SizedBox(
-                              width: MediaQuery.of(context).size.width * 0.01,
-                            ),
-                         Text(
-                          "👋Bessie Copper",
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontWeight: FontWeight.bold,
-                            color: Lodgix.getTextColor(context),
-                          ),
-                        ),
-                      ],
-                    ),
-                   
-            
-                    Row(
-                      children: [
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.2),
-                                spreadRadius: 2,
-                                blurRadius: 5,
-                                offset: Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: IconButton(
-                            onPressed: () {},
-                            icon: Icon(Icons.notifications),
-                            color: Lodgix.getButtonColor(context),
-                            iconSize: 30,
-                          ),
-                        ),
-                        SizedBox(
-                          width: MediaQuery.of(context).size.width * 0.02,
-                        ),  
-                        Container(
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.grey.withOpacity(0.2),
-                                spreadRadius: 2,
-                                blurRadius: 5,
-                                offset: Offset(0, 3),
-                              ),
-                            ],
-                          ),
-                          child: IconButton(
-                            onPressed: (){
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => const Bookmarks(),
-                                ),
-                              );
-                            },
-                            icon: Icon(Icons.bookmark),
-                            color: Lodgix.getButtonColor(context),
-                            iconSize: 30,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.02),
-            
-                GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => HotelSearchScreen.withDefaultHotels(),
                       ),
-                    );
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 8.0),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(25),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withOpacity(0.1),
-                          spreadRadius: 1,
-                          blurRadius: 10,
-                          offset: Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Container(
-                      padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      child: Row(
+                      Row(
                         children: [
-                          Expanded(
-                            child: Text(
-                              "Search hotel, location etc",
-                              style: TextStyle(
-                                color: Lodgix.getButtonColor(context),
-                                fontSize: 16,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ),
-                          Icon(
-                            Icons.search,
-                            color: Lodgix.getButtonColor(context),
-                            size: 24,
+                          SizedBox(width: 7),
+                          Icon(Icons.location_on, color: Colors.black),
+                          SizedBox(width: 5),
+                          Text(
+                            'Lagos, Nigeria',
+                            style: TextStyle(fontSize: 14, color: Colors.black),
                           ),
                         ],
                       ),
+                      Row(
+                        children: [
+                          SizedBox(width: 7),
+                          Text('👨', style: TextStyle(fontSize: 16)),
+                          SizedBox(width: 5),
+                          Text(
+                            userProvider.fullName.isNotEmpty
+                                ? userProvider.fullName
+                                : 'Guest User',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.black,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  Spacer(),
+                  Row(
+                    children: [
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.2),
+                              spreadRadius: 2,
+                              blurRadius: 5,
+                              offset: Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          onPressed: () {},
+                          icon: Icon(Icons.notifications),
+                          color: Lodgix.getButtonColor(context),
+                          iconSize: 30,
+                        ),
+                      ),
+                      SizedBox(width: MediaQuery.of(context).size.width * 0.02),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.grey.withOpacity(0.2),
+                              spreadRadius: 2,
+                              blurRadius: 5,
+                              offset: Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: IconButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const Bookmarks(),
+                              ),
+                            );
+                          },
+                          icon: Icon(Icons.bookmark),
+                          color: Lodgix.getButtonColor(context),
+                          iconSize: 30,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+              GestureDetector(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => HotelSearchScreen.withDefaultHotels(),
+                    ),
+                  );
+                },
+                child: Container(
+                  margin: const EdgeInsets.symmetric(horizontal: 8.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(25),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.grey.withOpacity(0.1),
+                        spreadRadius: 1,
+                        blurRadius: 10,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Container(
+                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            "Search hotel, location etc",
+                            style: TextStyle(
+                              color: Lodgix.getButtonColor(context),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                        Icon(
+                          Icons.search,
+                          color: Lodgix.getButtonColor(context),
+                          size: 24,
+                        ),
+                      ],
                     ),
                   ),
                 ),
-            
-                SizedBox(height: MediaQuery.of(context).size.height * 0.03),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Hotels Near You",
+              ),
+
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Hotels Near you',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {},
+                    child: Text(
+                      'View All',
                       style: TextStyle(
-                        fontSize: 22,
+                        color: Color(0xFF0A3D62),
+                        fontSize: 14,
                         fontWeight: FontWeight.bold,
-                        color: Lodgix.getTextColor(context),
                       ),
                     ),
-                    TextButton(
-                      onPressed: () {
-                        // Navigate to all hotels screen
+                  ),
+                ],
+              ),
+              SizedBox(height: 10),
+              SizedBox(
+                height: 235,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: hotels.length,
+                  itemBuilder: (context, index) {
+                    final hotel = hotels[index];
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => HotelDetails(
+                                  hotelName: hotel['name'],
+                                  location: hotel['location'],
+                                  price: hotel['price'],
+                                  rating: hotel['rating'],
+                                  image: hotel['image'],
+                                ),
+                          ),
+                        );
                       },
-                      child: Text(
-                        "View All",
-                        style: TextStyle(
-                          color: Lodgix.getButtonColor(context),
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: List.generate(hotels.length, (index) {
-                      final hotel = hotels[index];
-                      return Container(
-                        width: 250,
+                      child: Container(
                         margin: EdgeInsets.only(right: 16),
+                        width: MediaQuery.of(context).size.width * 0.6,
                         decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
                           color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.1),
-                              spreadRadius: 1,
-                              blurRadius: 8,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
                         ),
-                        child: InkWell(
-                          onTap: () {
-                            print("Selected hotel: ${hotel['name']}");
-                            // Navigate to hotel details
-                          },
-                          borderRadius: BorderRadius.circular(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.vertical(
-                                    top: Radius.circular(12),
-                                    bottom: Radius.circular(12),
-                                  ),
-                                  child: Image.asset(
-                                    hotel['image'],
-                                    width: double.infinity,
-                                    height: 140,
-                                    fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        width: double.infinity,
-                                        height: 140,
-                                        color: Colors.grey[300],
-                                        child: Icon(
-                                          Icons.hotel,
-                                          size: 40,
-                                          color: Colors.grey[600],
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                              ),
-            
-                              // Content with padding
-                              Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Hotel Name
-                                    Text(
-                                      hotel['name'],
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    SizedBox(height: 4),
-            
-                                    // Location
-                                    Text(
-                                      hotel['location'],
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey[600],
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    SizedBox(height: 8),
-            
-                                    // Price and Rating
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          "₦${hotel['price'].toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} per night",
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFF4A90E2),
-                                          ),
-                                        ),
-            
-                                        // Rating
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.star,
-                                              color: Colors.orange,
-                                              size: 16,
-                                            ),
-                                            SizedBox(width: 4),
-                                            Container(
-                                              padding: EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 2,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: Colors.orange,
-                                                borderRadius: BorderRadius.circular(
-                                                  12,
-                                                ),
-                                              ),
-                                              child: Text(
-                                                "${hotel['rating']}/5",
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.03),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Explore by City",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Lodgix.getTextColor(context),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      child: Text(
-                        "View All",
-                        style: TextStyle(
-                          color: Lodgix.getButtonColor(context),
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: List.generate(cities.length, (index) {
-                      final city = cities[index];
-                      return Container(
-                        margin: EdgeInsets.only(right: 8),
                         child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.center,
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Container(
-                              width: 80,
-                              height: 80,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                image: DecorationImage(
-                                  image: AssetImage(city['image']),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            ),
-                            Text(
-                              city['name'],
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    }),
-                  ),
-                ),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.03),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      "Highest Rated Hotels",
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Lodgix.getTextColor(context),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () {},
-                      child: Text(
-                        "View All",
-                        style: TextStyle(
-                          color: Lodgix.getButtonColor(context),
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                SizedBox(height: MediaQuery.of(context).size.height * 0.01),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: List.generate(hotels.length, (index) {
-                      final hotel = hotels[index];
-                      return Container(
-                        width: 250,
-                        margin: EdgeInsets.only(right: 16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(12),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.grey.withOpacity(0.1),
-                              spreadRadius: 1,
-                              blurRadius: 8,
-                              offset: Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: InkWell(
-                          onTap: () {
-                            print("Selected hotel: ${hotel['name']}");
-                            // Navigate to hotel details
-                          },
-                          borderRadius: BorderRadius.circular(12),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.vertical(
-                                    top: Radius.circular(12),
-                                    bottom: Radius.circular(12),
-                                  ),
-                                  child: Image.asset(
-                                    hotel['image'],
-                                    width: double.infinity,
-                                    height: 140,
+                            Padding(
+                              padding: const EdgeInsets.all(13.0),
+                              child: Container(
+                                height: 128,
+                                width: double.maxFinite,
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: AssetImage(hotel['image']),
                                     fit: BoxFit.cover,
-                                    errorBuilder: (context, error, stackTrace) {
-                                      return Container(
-                                        width: double.infinity,
-                                        height: 140,
-                                        color: Colors.grey[300],
-                                        child: Icon(
-                                          Icons.hotel,
-                                          size: 40,
-                                          color: Colors.grey[600],
-                                        ),
-                                      );
-                                    },
                                   ),
+                                  borderRadius: BorderRadius.circular(10),
                                 ),
                               ),
-            
-                              // Content with padding
-                              Padding(
-                                padding: const EdgeInsets.all(12.0),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    // Hotel Name
-                                    Text(
-                                      hotel['name'],
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.black87,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                left: 13.0,
+                                right: 13.0,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    hotel['name'],
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    SizedBox(height: 4),
-            
-                                    // Location
-                                    Text(
-                                      hotel['location'],
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        color: Colors.grey[600],
-                                        fontWeight: FontWeight.w400,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                                  ),
+                                  Text(
+                                    hotel['location'],
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
                                     ),
-                                    SizedBox(height: 8),
-            
-                                    // Price and Rating
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
-                                          "₦${hotel['price'].toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} per night",
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.bold,
-                                            color: Color(0xFF4A90E2),
+                                  ),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        "₦${hotel['price'].toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} per night",
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF0A3D62),
+                                        ),
+                                      ),
+                                      Spacer(),
+                                      Icon(
+                                        Icons.star,
+                                        color: Colors.yellow,
+                                        size: 16,
+                                      ),
+                                      SizedBox(width: 5),
+                                      Container(
+                                        height: 23,
+                                        width: 43,
+                                        decoration: BoxDecoration(
+                                          color: Colors.orange,
+                                          borderRadius: BorderRadius.circular(
+                                            10,
                                           ),
                                         ),
-            
-                                        // Rating
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.star,
-                                              color: Colors.orange,
-                                              size: 16,
-                                            ),
-                                            SizedBox(width: 4),
-                                            Container(
-                                              padding: EdgeInsets.symmetric(
-                                                horizontal: 8,
-                                                vertical: 2,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: Colors.orange,
-                                                borderRadius: BorderRadius.circular(
-                                                  12,
-                                                ),
-                                              ),
-                                              child: Text(
-                                                "${hotel['rating']}/5",
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                        child: Center(
+                                          child: Text(
+                                            '${hotel['rating']}/5',
+                                            style: TextStyle(fontSize: 14),
+                                          ),
                                         ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Explore by City',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {},
+                    child: Text(
+                      'View All',
+                      style: TextStyle(
+                        color: Color(0xFF0A3D62),
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(
+                height: 120,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: cities.length,
+                  itemBuilder: (context, index) {
+                    final city = cities[index];
+                    return Column(
+                      children: [
+                        Container(
+                          height: 80,
+                          width: 80,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            image: DecorationImage(
+                              image: AssetImage(city['image']),
+                            ),
                           ),
                         ),
-                      );
-                    }),
-                  ),
+                        Text(
+                          city['name'],
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    );
+                  },
                 ),
-              ],
-            ),
+              ),
+              SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Highest Rated Hotels',
+                    style: TextStyle(
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {},
+                    child: Text(
+                      'View All',
+                      style: TextStyle(
+                        color: Color(0xFF0A3D62),
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              SizedBox(height: 10),
+              SizedBox(
+                height: 235,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: hotels.length,
+                  itemBuilder: (context, index) {
+                    final hotel = hotels[index];
+                    return GestureDetector(
+                      onTap: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder:
+                                (context) => HotelDetails(
+                                  hotelName: hotel['name'],
+                                  location: hotel['location'],
+                                  price: hotel['price'],
+                                  rating: hotel['rating'],
+                                  image: hotel['image'],
+                                ),
+                          ),
+                        );
+                      },
+                      child: Container(
+                        margin: EdgeInsets.only(right: 16),
+                        width: MediaQuery.of(context).size.width * 0.6,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(10),
+                          color: Colors.white,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.all(13.0),
+                              child: Container(
+                                height: 128,
+                                width: double.maxFinite,
+                                decoration: BoxDecoration(
+                                  image: DecorationImage(
+                                    image: AssetImage(hotel['image']),
+                                    fit: BoxFit.cover,
+                                  ),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.only(
+                                left: 13.0,
+                                right: 13.0,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    hotel['name'],
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    hotel['location'],
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Row(
+                                    children: [
+                                      Text(
+                                        "₦${hotel['price'].toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')} per night",
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Color(0xFF4A90E2),
+                                        ),
+                                      ),
+                                      Spacer(),
+                                      Icon(
+                                        Icons.star,
+                                        color: Colors.yellow,
+                                        size: 16,
+                                      ),
+                                      SizedBox(width: 5),
+                                      Container(
+                                        height: 23,
+                                        width: 43,
+                                        decoration: BoxDecoration(
+                                          color: Colors.orange,
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                        ),
+                                        child: Center(
+                                          child: Text(
+                                            '${hotel['rating']}/5',
+                                            style: TextStyle(fontSize: 14),
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+            ],
           ),
         ),
-        bottomNavigationBar: BottomNavBar(currentIndex: 0,),
       ),
+      bottomNavigationBar: BottomNavBar(currentIndex: 0),
     );
   }
 }
