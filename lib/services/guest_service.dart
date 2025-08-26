@@ -2,6 +2,7 @@ import 'dart:developer';
 import 'package:dio/dio.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lodgix/request.dart';
+import 'package:lodgix/services/user_session.dart';
 
 class GuestService {
   static const String _baseUrl = '/users';
@@ -164,7 +165,6 @@ class GuestService {
     try {
       log('Logging in guest: $email');
       
-      // Ensure service is initialized
       if (!RequestService.isInitialized) {
         RequestService.initialize();
       }
@@ -179,11 +179,16 @@ class GuestService {
       if (response != null && response['status'] == 'success') {
         log('Guest login successful');
         
-        // Save the token
         final token = response['data']['token'];
-        if (token != null) {
+        final userData = response['data']['user'];
+        
+        if (token != null && userData != null) {
           await RequestService.setAuthToken(token);
-          log('Token saved successfully');
+          await UserSession.saveUserSession(
+            userData: userData,
+            token: token,
+          );
+          log('User session saved successfully');
         }
         
         return response;
@@ -194,6 +199,47 @@ class GuestService {
     } catch (e) {
       log('Error logging in guest: $e');
       rethrow;
+    }
+  }
+
+  // Update guest profile
+  static Future<Map<String, dynamic>?> updateGuestProfile({
+    required int guestId,
+    required String fullName,
+    required String email,
+    required String address,
+    required String phoneNumber,
+  }) async {
+    try {
+      print('=== UPDATING GUEST PROFILE ===');
+      print('Guest ID: $guestId');
+      print('Full Name: $fullName');
+      print('Email: $email');
+      print('Address: $address');
+      print('Phone: $phoneNumber');
+
+      final response = await RequestService.patch('/guests/$guestId', {
+        'full_name': fullName,
+        'email': email,
+        'address': address,
+        'phone_number': phoneNumber,
+      });
+
+      print('Profile update response: $response');
+
+      if (response != null && response['status'] == 'success') {
+        print('Profile updated successfully');
+        return response;
+      } else {
+        print('Failed to update profile: ${response?['message']}');
+        return response;
+      }
+    } catch (e) {
+      print('Error updating profile: $e');
+      return {
+        'status': 'error',
+        'message': 'Network error: $e'
+      };
     }
   }
 }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:lodgix/request.dart' as RequestService;
 import 'package:lodgix/screens/dashboard.dart';
 import 'package:lodgix/screens/forgotPassword.dart';
 import 'package:lodgix/screens/signup.dart';
@@ -50,36 +51,43 @@ class _LoginState extends State<Login> {
       print('=== LOGIN RESPONSE ===');
       print('Response: $response');
 
+      // Update the login success handling
       if (response != null && response['status'] == 'success') {
-        // Extract user data from response with null checks
         final data = response['data'];
         if (data != null) {
           final token = data['token'];
-          final guestData = data['guest'];
+          final guestData = data['guest'] ?? data['user']; // Handle both possible keys
           
           if (token != null && guestData != null) {
-            print('Login successful!');
-            print('Token: $token');
-            print('Guest data: $guestData');
-
-            // Save user data to provider
+            print('=== LOGIN RESPONSE DATA DEBUG ===');
+            print('Full guest data: $guestData');
+            print('Guest ID: ${guestData['id']}');
+            print('Full Name: ${guestData['full_name']}');
+            print('Email: ${guestData['email']}');
+            print('Address from API: "${guestData['address']}"');
+            print('Phone from API: "${guestData['phone_number']}"');
+            print('================================');
+            
+            // Save user data to provider using the loginUser method that saves to SharedPreferences
             final userProvider = Provider.of<UserProvider>(context, listen: false);
             
-            // Call setUserData and await it properly
-            await userProvider.setUserData(
-              username: guestData['email'] ?? '',
-              token: token,
-              email: guestData['email'] ?? '',
+            // Call loginUser and await it properly
+            await userProvider.loginUser(
               userId: guestData['id'],
+              username: guestData['email'] ?? '',
+              email: guestData['email'] ?? '',
               fullName: guestData['full_name'] ?? '',
-              joinDate: guestData['created_at'] ?? DateTime.now().toString(),
-              address: guestData['address'] ?? '', // Make sure this matches your backend field
-              phoneNumber: guestData['phone_number'] ?? '', // Make sure this matches your backend field
+              token: token,
+              address: guestData['address'], // Make sure this is included
+              phoneNumber: guestData['phone_number'], // Make sure this is included
             );
 
             // Debug: Print user provider state after setting data
             userProvider.debugPrintHiveData();
 
+            // Set auth token for future requests
+            await RequestService.setAuthToken(token);
+            
             // Show success message
             _showSuccessSnackBar('Login successful! Welcome back!');
 
@@ -107,7 +115,7 @@ class _LoginState extends State<Login> {
       }
     } catch (e) {
       print('Login error: $e');
-      _showErrorSnackBar('Failed to login. Please check your credentials and try again.');
+      _showErrorSnackBar('An error occurred, Please try again later.');
     } finally {
       if (mounted) { // Check if widget is still mounted
         setState(() {

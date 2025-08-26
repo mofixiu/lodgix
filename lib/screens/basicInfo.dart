@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:lodgix/screens/otp_verification.dart';
 import 'package:lodgix/services/guest_service.dart';
 import 'package:lodgix/themes/theme.dart';
@@ -179,12 +180,7 @@ void dispose() {
                             Expanded(
                               child: TextFormField(
                                 controller: fullNameController,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter your full name';
-                                  }
-                                  return null;
-                                },
+                                validator: _validateFullName,
                                 decoration: InputDecoration(
                                   hintText: "Full Name",
                                   hintStyle: TextStyle(
@@ -257,17 +253,8 @@ void dispose() {
                             Expanded(
                               child: TextFormField(
                                 controller: phoneNumberController,
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Please enter your phone number';
-                                  }
-                                  if (!RegExp(
-                                    r'^\+?[0-9]{10,15}$',
-                                  ).hasMatch(value)) {
-                                    return 'Please enter a valid phone number';
-                                  }
-                                  return null;
-                                },
+                                inputFormatters: [PhoneNumberFormatter()],
+                                validator: _validatePhoneNumber,
                                 decoration: InputDecoration(
                                   hintText: "Enter Phone Number",
                                   hintStyle: TextStyle(
@@ -494,3 +481,67 @@ void dispose() {
     );
   }
 }
+class PhoneNumberFormatter extends TextInputFormatter {
+  @override
+  TextEditingValue formatEditUpdate(
+    TextEditingValue oldValue,
+    TextEditingValue newValue,
+  ) {
+    final digitsOnly = newValue.text.replaceAll(RegExp(r'\D'), '');
+    final limitedDigits = digitsOnly.length > 11
+        ? digitsOnly.substring(0, 11)
+        : digitsOnly;
+
+    final buffer = StringBuffer();
+    for (int i = 0; i < limitedDigits.length; i++) {
+      buffer.write(limitedDigits[i]);
+      if (i == 2 || i == 5) buffer.write(' ');
+    }
+
+    return TextEditingValue(
+      text: buffer.toString(),
+      selection: TextSelection.collapsed(offset: buffer.length),
+    );
+  }
+}
+
+
+
+
+String? _validateFullName(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Full name cannot be empty';
+    }
+
+    final nameParts = value.trim().split(RegExp(r'\s+'));
+    if (nameParts.length < 2) {
+      return 'Please enter your first and last name';
+    }
+
+    final validCharacters = RegExp(r"^[a-zA-Z\s'-]+$");
+    if (!validCharacters.hasMatch(value)) {
+      return 'Name can only contain letters, spaces, hyphens, or apostrophes';
+    }
+
+    return null;
+  }
+  String? _validatePhoneNumber(String? value) {
+    if (value == null   || value.isEmpty) {
+      return 'Field cannot be empty';
+    }
+
+    final digitsOnly = value.replaceAll(' ', '');
+    if (digitsOnly.length != 11) {
+      return 'Phone number must be exactly 11 digits';
+    }
+
+    final validPhoneRegExp = RegExp(
+      r'^(070|080|081|090|091|071|089|088|085|086)\d{8}$',
+    );
+
+    if (!validPhoneRegExp.hasMatch(digitsOnly)) {
+      return 'Enter a valid phone number';
+    }
+
+    return null;
+  }

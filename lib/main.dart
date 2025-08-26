@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:lodgix/providers/booking_provider.dart';
+import 'package:lodgix/providers/bookmark_provider.dart';
+import 'package:lodgix/providers/hotel_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'request.dart';
@@ -35,11 +38,14 @@ void main() async {
   }
   
   runApp(
-    // Use MultiProvider to include both providers
+    // Use MultiProvider to include all providers
     MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (context) => ThemeProvider()),
-        ChangeNotifierProvider(create: (context) => UserProvider()), // Add UserProvider
+        ChangeNotifierProvider(create: (context) => UserProvider()),
+        ChangeNotifierProvider(create: (_) => HotelProvider()),
+        ChangeNotifierProvider(create: (_) => BookmarkProvider()),
+        ChangeNotifierProvider(create: (_) => BookingProvider()),
       ],
       child: MyApp(),
     ),

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+// import 'package:lodgix/providers/hotel_provider.dart';
+// import 'package:provider/provider.dart';
 
 const primaryColor = Color(0xFF0A3D62);
 
@@ -383,4 +385,18 @@ class _HotelSearchScreenState extends State<HotelSearchScreen> {
       ),
     );
   }
+
+  // Add this method to use provider data
+
+  // static Future<Widget> withDatabaseHotels() async {
+  //   // This will create the widget with database hotels
+  //   return Builder(
+  //     builder: (context) {
+  //       final hotelProvider = Provider.of<HotelProvider>(context, listen: false);
+  //       return HotelSearchScreen(
+  //         hotels: hotelProvider.allHotels.map((hotel) => Hotel.fromMap(hotel)).toList(),
+  //       );
+  //     },
+  //   );
+  // }
 }

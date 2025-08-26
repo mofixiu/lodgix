@@ -1,22 +1,29 @@
 import 'package:flutter/material.dart';
 import 'package:lodgix/widgets/customButton.dart';
 import 'package:lodgix/screens/bookedScreen.dart';
+import 'package:lodgix/services/booking_service.dart';
+import 'package:lodgix/providers/user_provider.dart';
+import 'package:provider/provider.dart';
 
 class BookedHotelsManager {
   static List<Map<String, dynamic>> _bookedHotels = [];
   
   static void addBookedHotel(Map<String, dynamic> hotelData) {
-    // Check if hotel is already booked to avoid duplicates
+    print('Adding booked hotel: ${hotelData['name']}');
     bool alreadyBooked = _bookedHotels.any((hotel) => 
         hotel['name'] == hotelData['name'] && 
         hotel['location'] == hotelData['location']);
     
     if (!alreadyBooked) {
       _bookedHotels.add(hotelData);
+      print('Hotel added. Total local bookings: ${_bookedHotels.length}');
+    } else {
+      print('Hotel already exists in local bookings');
     }
   }
   
   static List<Map<String, dynamic>> getBookedHotels() {
+    print('Returning ${_bookedHotels.length} local booked hotels');
     return List.from(_bookedHotels);
   }
   
@@ -24,6 +31,12 @@ class BookedHotelsManager {
     _bookedHotels.removeWhere((hotel) => 
         hotel['name'] == hotelData['name'] && 
         hotel['location'] == hotelData['location']);
+    print('Hotel removed. Total local bookings: ${_bookedHotels.length}');
+  }
+  
+  static void clearAll() {
+    _bookedHotels.clear();
+    print('All local bookings cleared');
   }
 }
 
@@ -36,6 +49,7 @@ class Payment extends StatefulWidget {
   final int rooms;
   final double totalPrice;
   final String image;
+  final int? hotelId; // This is correct
 
   const Payment({
     Key? key,
@@ -47,6 +61,7 @@ class Payment extends StatefulWidget {
     required this.rooms,
     required this.totalPrice,
     required this.image,
+    this.hotelId, // This is correct
   }) : super(key: key);
 
   @override
@@ -55,6 +70,7 @@ class Payment extends StatefulWidget {
 
 class _PaymentState extends State<Payment> {
   String selectedPaymentMethod = 'arrival';
+  bool _isProcessing = false;
 
   Widget _buildPaymentMethod({
     required String value,
@@ -141,29 +157,175 @@ class _PaymentState extends State<Payment> {
     );
   }
 
-  void _confirmBooking() {
-    // Create hotel data object to add to booked list
-    Map<String, dynamic> bookedHotelData = {
-      'name': widget.hotelName,
-      'location': widget.location,
-      'rating': 4.5, // You can pass this from hotel details if available
-      'price': widget.totalPrice.toInt(),
-      'image': widget.image,
-      'checkInDate': widget.checkInDate.toIso8601String(),
-      'checkOutDate': widget.checkOutDate.toIso8601String(),
-      'guests': widget.guests,
-      'rooms': widget.rooms,
-      'paymentMethod': selectedPaymentMethod,
-      'bookingDate': DateTime.now().toIso8601String(),
-    };
+  Future<void> _confirmBooking() async {
+    setState(() {
+      _isProcessing = true;
+    });
 
-    // Add to booked hotels
-    BookedHotelsManager.addBookedHotel(bookedHotelData);
+    try {
+      // Get user provider
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      
+      print('=== BOOKING CONFIRMATION DEBUG ===');
+      print('User logged in: ${userProvider.isLoggedIn}');
+      print('User ID: ${userProvider.userId}');
+      print('Hotel ID: ${widget.hotelId}');
+      print('Payment Method: $selectedPaymentMethod');
+      print('================================');
 
-    String paymentMethodText = selectedPaymentMethod == 'arrival'
-        ? 'Payment on Arrival'
-        : 'Bank Transfer';
+      if (!userProvider.isLoggedIn || userProvider.userId == null) {
+        _showErrorDialog('Please log in to complete your booking');
+        return;
+      }
 
+      if (widget.hotelId == null) {
+        _showErrorDialog('Hotel information is missing. Please try again.');
+        return;
+      }
+
+      // Get available rooms for the hotel
+      print('Getting available rooms for hotel: ${widget.hotelId}');
+      final availableRooms = await BookingService.getAvailableRooms(
+        hotelId: widget.hotelId!,
+        checkInDate: widget.checkInDate,
+        checkOutDate: widget.checkOutDate,
+      );
+
+      if (availableRooms.isEmpty) {
+        _showErrorDialog('No rooms available for the selected dates. Please choose different dates.');
+        return;
+      }
+
+      // Select the first available room (you can implement room selection logic here)
+      final selectedRoom = availableRooms.first;
+      final roomId = selectedRoom['id'];
+      
+      print('Selected room ID: $roomId');
+
+      // Determine payment status based on method
+      String paymentStatus = selectedPaymentMethod == 'arrival' ? 'Unpaid' : 'Paid';
+      String paymentMethod = selectedPaymentMethod == 'arrival' ? 'Cash' : 'Bank Transfer';
+
+      print('Creating booking...');
+      // Create booking in database
+      final bookingResponse = await BookingService.createBooking(
+        guestId: userProvider.userId!,
+        roomId: roomId,
+        checkInDate: widget.checkInDate,
+        checkOutDate: widget.checkOutDate,
+        totalAmount: widget.totalPrice,
+        paymentStatus: paymentStatus,
+      );
+
+      if (bookingResponse == null || bookingResponse['status'] != 'success') {
+        _showErrorDialog('Failed to create booking. Please try again.');
+        return;
+      }
+
+      print('Booking created successfully');
+      final bookingId = bookingResponse['data']['id'];
+
+      // Create payment record
+      print('Creating payment record...');
+      final paymentResponse = await BookingService.createPayment(
+        bookingId: bookingId,
+        amount: widget.totalPrice,
+        method: paymentMethod,
+        status: 'Completed',
+      );
+
+      if (paymentResponse == null || paymentResponse['status'] != 'success') {
+        print('Warning: Payment record creation failed, but booking was successful');
+      }
+
+      // Also add to local storage for immediate display
+      Map<String, dynamic> bookedHotelData = {
+        'name': widget.hotelName,
+        'location': widget.location,
+        'rating': 4.5,
+        'price': widget.totalPrice.toInt(),
+        'image': widget.image,
+        'checkInDate': widget.checkInDate.toIso8601String(),
+        'checkOutDate': widget.checkOutDate.toIso8601String(),
+        'guests': widget.guests,
+        'rooms': widget.rooms,
+        'paymentMethod': selectedPaymentMethod,
+        'bookingDate': DateTime.now().toIso8601String(),
+        'bookingId': bookingId,
+      };
+
+      BookedHotelsManager.addBookedHotel(bookedHotelData);
+
+      print('Booking process completed successfully');
+      _showSuccessDialog(paymentMethod);
+
+    } catch (e) {
+      print('Error during booking confirmation: $e');
+      _showErrorDialog('An error occurred while processing your booking. Please try again.');
+    } finally {
+      setState(() {
+        _isProcessing = false;
+      });
+    }
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          title: Row(
+            children: [
+              Icon(
+                Icons.error,
+                color: Colors.red,
+                size: 28,
+              ),
+              SizedBox(width: 8),
+              Text(
+                'Booking Failed',
+                style: TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          content: Text(
+            message,
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.red,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'OK',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showSuccessDialog(String paymentMethodText) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -279,9 +441,7 @@ class _PaymentState extends State<Payment> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        backgroundColor: Colors.white,
         elevation: 0,
         leading: IconButton(
           icon: Icon(
@@ -482,10 +642,10 @@ class _PaymentState extends State<Payment> {
           Container(
             padding: EdgeInsets.all(20),
             child: CustomButton(
-              ontap: _confirmBooking,
-              data: 'Confirm Booking',
+              ontap: _isProcessing ? null : _confirmBooking,
+              data: _isProcessing ? 'Processing...' : 'Confirm Booking',
               textcolor: Colors.white,
-              backgroundcolor: Color(0xFF0A3D62),
+              backgroundcolor: _isProcessing ? Colors.grey : Color(0xFF0A3D62),
               width: double.infinity,
               height: 50,
             ),

@@ -8,6 +8,7 @@ class DateSelect extends StatefulWidget {
   final int price;
   final double rating;
   final String image;
+  final int? hotelId; // Changed from String to int? to match HotelDetails
 
   const DateSelect({
     super.key,
@@ -16,6 +17,7 @@ class DateSelect extends StatefulWidget {
     required this.price,
     required this.rating,
     required this.image,
+    this.hotelId, // Made optional to match HotelDetails
   });
 
   @override
@@ -27,11 +29,11 @@ class _DateSelectState extends State<DateSelect> {
   DateTime? checkOutDate;
   int guests = 1;
   int rooms = 1;
-  bool isManualRoomChange = false; // Track if user manually changed rooms
+  bool isManualRoomChange = false;
 
-  // Calculate minimum required rooms based on guests (2 guests per room)
+  // Calculate minimum required rooms based on guests (3 guests per room)
   int get minimumRoomsRequired {
-    return ((guests + 1) / 2).ceil(); // 2 guests per room, round up
+    return (guests / 3).ceil(); // Fixed calculation: 1-3 guests = 1 room, 4-6 guests = 2 rooms
   }
 
   // Auto-adjust rooms when guests change
@@ -46,6 +48,7 @@ class _DateSelectState extends State<DateSelect> {
         // Ensure rooms is at least the minimum required
         if (rooms < minimumRoomsRequired) {
           rooms = minimumRoomsRequired;
+          isManualRoomChange = false; // Reset manual flag when we auto-adjust up
         }
       }
     });
@@ -56,6 +59,14 @@ class _DateSelectState extends State<DateSelect> {
     setState(() {
       isManualRoomChange = true;
       rooms = newRooms;
+    });
+  }
+
+  // Reset manual room change when guests change significantly
+  void _resetManualRoomFlag() {
+    setState(() {
+      isManualRoomChange = false;
+      rooms = minimumRoomsRequired;
     });
   }
 
@@ -262,7 +273,7 @@ class _DateSelectState extends State<DateSelect> {
                                 ),
                               ),
                               Text(
-                                'Number of guests (2 per room)',
+                                'Number of guests (3 per room)',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Colors.grey[600],
@@ -283,12 +294,14 @@ class _DateSelectState extends State<DateSelect> {
                                 width: 32,
                                 height: 32,
                                 decoration: BoxDecoration(
-                                  border: Border.all(color: Color(0xFF0A3D62)),
+                                  border: Border.all(
+                                    color: guests > 1 ? Color(0xFF0A3D62) : Colors.grey[400]!,
+                                  ),
                                   borderRadius: BorderRadius.circular(6),
                                 ),
                                 child: Icon(
                                   Icons.remove,
-                                  color: Color(0xFF0A3D62),
+                                  color: guests > 1 ? Color(0xFF0A3D62) : Colors.grey[400],
                                   size: 18,
                                 ),
                               ),
@@ -424,9 +437,47 @@ class _DateSelectState extends State<DateSelect> {
                       ],
                     ),
                   ),
+
+                  // Add a reset button for room calculation
+                  if (isManualRoomChange && rooms != minimumRoomsRequired)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: GestureDetector(
+                        onTap: _resetManualRoomFlag,
+                        child: Container(
+                          padding: EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Color(0xFF0A3D62).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: Color(0xFF0A3D62).withOpacity(0.3),
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.refresh,
+                                color: Color(0xFF0A3D62),
+                                size: 14,
+                              ),
+                              SizedBox(width: 4),
+                              Text(
+                                'Reset to auto-calculated rooms (${minimumRoomsRequired})',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  color: Color(0xFF0A3D62),
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                   
                   // Auto room calculation info
-                  if (guests > 2)
+                  if (guests > 3)
                     Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Container(
@@ -448,7 +499,7 @@ class _DateSelectState extends State<DateSelect> {
                             SizedBox(width: 8),
                             Expanded(
                               child: Text(
-                                'Rooms auto-adjusted for $guests guests (2 guests per room)',
+                                'For $guests guests, we recommend ${minimumRoomsRequired} room${minimumRoomsRequired > 1 ? 's' : ''} (3 guests per room)',
                                 style: TextStyle(
                                   fontSize: 12,
                                   color: Color(0xFF0A3D62),
@@ -503,7 +554,7 @@ class _DateSelectState extends State<DateSelect> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text('Duration:', style: TextStyle(color: Colors.grey[600])),
-                              Text('${checkOutDate!.difference(checkInDate!).inDays} nights'),
+                              Text('${checkOutDate!.difference(checkInDate!).inDays} night(s)'),
                             ],
                           ),
                           SizedBox(height: 8),
@@ -567,6 +618,7 @@ class _DateSelectState extends State<DateSelect> {
                         rooms: rooms,
                         totalPrice: totalPrice,
                         image: widget.image,
+                        hotelId: widget.hotelId, // This will now be int? instead of String
                       ),
                     ),
                   );

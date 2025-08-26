@@ -4,6 +4,7 @@ import 'package:lodgix/providers/user_provider.dart';
 import 'package:lodgix/screens/edit_profile.dart';
 import 'package:lodgix/screens/login.dart';
 import 'package:lodgix/screens/notifications.dart';
+import 'package:lodgix/screens/paymentInfo.dart'; // Add this import
 import 'package:lodgix/widgets/bottomNavBar.dart';
 
 class Profile extends StatefulWidget {
@@ -112,16 +113,86 @@ class _ProfileState extends State<Profile> {
                   Expanded(
                     child: ElevatedButton(
                       onPressed: () async {
-                        Navigator.pop(context);
+                        if (!mounted) return; // Early return if widget is disposed
                         
-                        // Properly logout using UserProvider
-                        final userProvider = Provider.of<UserProvider>(context, listen: false);
-                        await userProvider.logout();
+                        Navigator.pop(context); // Close the bottom sheet first
                         
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => const Login()),
+                        // Show loading indicator
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (BuildContext context) {
+                            return Center(
+                              child: CircularProgressIndicator(
+                                color: Color(0xFF0A3D62),
+                              ),
+                            );
+                          },
                         );
+                        
+                        try {
+                          // Properly logout using UserProvider's logoutUser method
+                          final userProvider = Provider.of<UserProvider>(context, listen: false);
+                          
+                          print('=== STARTING LOGOUT PROCESS ===');
+                          print('Current user state before logout:');
+                          print('- Is logged in: ${userProvider.isLoggedIn}');
+                          print('- User ID: ${userProvider.userId}');
+                          print('- Username: ${userProvider.username}');
+                          print('- Email: ${userProvider.email}');
+                          print('===================================');
+                          
+                          // Call the logout method WITHOUT passing context to avoid null issues
+                          await userProvider.logoutUser();
+                          
+                          print('=== LOGOUT COMPLETED ===');
+                          print('User state after logout:');
+                          print('- Is logged in: ${userProvider.isLoggedIn}');
+                          print('- User ID: ${userProvider.userId}');
+                          print('- Username: ${userProvider.username}');
+                          print('- Email: ${userProvider.email}');
+                          print('- Token: ${userProvider.token}');
+                          print('========================');
+                          
+                          // Close loading dialog
+                          if (mounted && Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          }
+                          
+                          // Navigate to login screen and clear all previous routes
+                          if (mounted) {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (context) => const Login()),
+                              (route) => false, // This removes all previous routes
+                            );
+                          }
+                          
+                        } catch (e) {
+                          print('Error during logout: $e');
+                          
+                          // Close loading dialog
+                          if (mounted && Navigator.canPop(context)) {
+                            Navigator.pop(context);
+                          }
+                          
+                          // Show error message
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text('Logout completed with some warnings: $e'),
+                                backgroundColor: Colors.orange,
+                              ),
+                            );
+                            
+                            // Still navigate to login even if there were errors
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (context) => const Login()),
+                              (route) => false,
+                            );
+                          }
+                        }
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
@@ -279,10 +350,18 @@ class _ProfileState extends State<Profile> {
                 ),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                 
-                _buildProfileMenuItem(
-                  icon: Icons.wallet,
-                  title: "Payment",
-                  color: Colors.black,
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const PaymentInfo()),
+                    );
+                  },
+                  child: _buildProfileMenuItem(
+                    icon: Icons.wallet,
+                    title: "Payment",
+                    color: Colors.black,
+                  ),
                 ),
                 SizedBox(height: MediaQuery.of(context).size.height * 0.02),
                 
@@ -383,7 +462,7 @@ class _ProfileState extends State<Profile> {
 
   String _formatJoinDate(String joinDate) {
     try {
-      final date = DateTime.parse(joinDate);
+    final date = DateTime.parse(joinDate);
       final months = [
         'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
         'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'

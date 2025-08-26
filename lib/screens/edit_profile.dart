@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:lodgix/providers/user_provider.dart';
+import 'package:lodgix/services/guest_service.dart';
 import 'package:provider/provider.dart';
 
 class EditProfile extends StatefulWidget {
@@ -11,14 +12,11 @@ class EditProfile extends StatefulWidget {
 
 class _EditProfileState extends State<EditProfile> {
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _dobController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _countryController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   
-  String _selectedGender = 'Prefer not to say';
-  final List<String> _genders = ['Male', 'Female', 'Prefer not to say'];
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -32,19 +30,8 @@ class _EditProfileState extends State<EditProfile> {
   void _initializeUserData() {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     
-    // Pre-fill the form with existing user data
-    _nameController.text = userProvider.fullName.isNotEmpty 
-        ? userProvider.fullName 
-        : '';
-    _emailController.text = userProvider.email.isNotEmpty 
-        ? userProvider.email 
-        : '';
-    _countryController.text = userProvider.address.isNotEmpty 
-        ? userProvider.address 
-        : '';
-    _phoneController.text = userProvider.phoneNumber.isNotEmpty 
-        ? userProvider.phoneNumber 
-        : '';
+    // Call debug method to see storage state
+    userProvider.debugUserDataLoading();
     
     // Debug print to see what data is available
     print('=== EDIT PROFILE INITIALIZATION ===');
@@ -55,6 +42,20 @@ class _EditProfileState extends State<EditProfile> {
     print('User ID: ${userProvider.userId}');
     print('Is Logged In: ${userProvider.isLoggedIn}');
     print('===================================');
+    
+    // Pre-fill the form with existing user data
+    _nameController.text = userProvider.fullName.isNotEmpty 
+        ? userProvider.fullName 
+        : '';
+    _emailController.text = userProvider.email.isNotEmpty 
+        ? userProvider.email 
+        : '';
+    _addressController.text = userProvider.address.isNotEmpty 
+        ? userProvider.address 
+        : '';
+    _phoneController.text = userProvider.phoneNumber.isNotEmpty 
+        ? userProvider.phoneNumber 
+        : '';
 
     // Force UI update
     setState(() {});
@@ -63,10 +64,8 @@ class _EditProfileState extends State<EditProfile> {
   @override
   void dispose() {
     _nameController.dispose();
-    _usernameController.dispose();
-    _dobController.dispose();
     _emailController.dispose();
-    _countryController.dispose();
+    _addressController.dispose();
     _phoneController.dispose();
     super.dispose();
   }
@@ -79,11 +78,11 @@ class _EditProfileState extends State<EditProfile> {
     bool readOnly = false,
     TextInputType? keyboardType,
     String? hintText,
+    int maxLines = 1,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Add label
         Text(
           label,
           style: TextStyle(
@@ -103,6 +102,7 @@ class _EditProfileState extends State<EditProfile> {
             controller: controller,
             readOnly: readOnly,
             keyboardType: keyboardType,
+            maxLines: maxLines,
             style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -127,134 +127,105 @@ class _EditProfileState extends State<EditProfile> {
                     )
                   : null,
             ),
-            onTap: onSuffixTap,
           ),
         ),
         SizedBox(height: 20),
       ],
     );
   }
-
-  Widget _buildDropdownField({
-    required String value,
-    required List<String> items,
-    required ValueChanged<String?> onChanged,
-    required String label,
-  }) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Add label
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Colors.black87,
-          ),
-        ),
-        SizedBox(height: 8),
-        Container(
-          decoration: BoxDecoration(
-            color: Colors.grey[100],
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: DropdownButtonFormField<String>(
-            value: value,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-            ),
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w500,
-              color: Colors.black87,
-            ),
-            icon: Icon(
-              Icons.keyboard_arrow_down,
-              color: Color(0xFF0A3D62),
-            ),
-            items: items.map((String item) {
-              return DropdownMenuItem<String>(
-                value: item,
-                child: Text(item),
-              );
-            }).toList(),
-            onChanged: onChanged,
-          ),
-        ),
-        SizedBox(height: 20),
-      ],
-    );
-  }
-
-  // void _selectDate() async {
-  //   final DateTime? picked = await showDatePicker(
-  //     context: context,
-  //     initialDate: DateTime(2004, 3, 16),
-  //     firstDate: DateTime(1950),
-  //     lastDate: DateTime.now(),
-  //     builder: (context, child) {
-  //       return Theme(
-  //         data: Theme.of(context).copyWith(
-  //           colorScheme: ColorScheme.light(
-  //             primary: Color(0xFF0A3D62),
-  //           ),
-  //         ),
-  //         child: child!,
-  //       );
-  //     },
-  //   );
-    
-  //   if (picked != null) {
-  //     setState(() {
-  //       _dobController.text = '${picked.day}/${picked.month}/${picked.year}';
-  //     });
-  //   }
-  // }
 
   void _updateProfile() async {
     final userProvider = Provider.of<UserProvider>(context, listen: false);
     
-    try {
-      // Show loading
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (context) => Center(
-          child: CircularProgressIndicator(
-            color: Color(0xFF0A3D62),
-          ),
-        ),
-      );
-
-      await userProvider.updateUserProfile(
-        fullName: _nameController.text.trim(),
-        // Don't update email since it's read-only
-        address: _countryController.text.trim(),
-        phoneNumber: _phoneController.text.trim(),
-      );
-      
-      // Close loading dialog
-      Navigator.pop(context);
-      
+    // Validate fields
+    if (_nameController.text.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Profile updated successfully!'),
-          backgroundColor: Color(0xFF0A3D62),
+          content: Text('Please enter your full name'),
+          backgroundColor: Colors.red,
         ),
       );
-      Navigator.pop(context);
+      return;
+    }
+
+    if (_phoneController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please enter your phone number'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    if (_addressController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please enter your address'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      print('=== UPDATING PROFILE ===');
+      print('User ID: ${userProvider.userId}');
+      print('Full Name: ${_nameController.text.trim()}');
+      print('Email: ${_emailController.text.trim()}');
+      print('Address: ${_addressController.text.trim()}');
+      print('Phone: ${_phoneController.text.trim()}');
+      print('=== END OF UPDATE DATA ===');
+
+      // Update profile in database
+      final response = await GuestService.updateGuestProfile(
+        guestId: userProvider.userId!,
+        fullName: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        address: _addressController.text.trim(),
+        phoneNumber: _phoneController.text.trim(),
+      );
+
+      if (response != null && response['status'] == 'success') {
+        // Update local user provider data
+        await userProvider.updateUserProfile(
+          fullName: _nameController.text.trim(),
+          address: _addressController.text.trim(),
+          phoneNumber: _phoneController.text.trim(),
+        );
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Profile updated successfully!'),
+            backgroundColor: Color(0xFF0A3D62),
+          ),
+        );
+        Navigator.pop(context);
+      } else {
+        final errorMessage = response?['message'] ?? 'Failed to update profile';
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(errorMessage),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     } catch (e) {
-      // Close loading dialog
-      Navigator.pop(context);
-      
+      print('Profile update error: $e');
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Failed to update profile: $e'),
           backgroundColor: Colors.red,
         ),
       );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -285,8 +256,13 @@ class _EditProfileState extends State<EditProfile> {
           // Show loading if user data is not ready
           if (!userProvider.isLoggedIn) {
             return Center(
-              child: CircularProgressIndicator(
-                color: Color(0xFF0A3D62),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(color: Color(0xFF0A3D62)),
+                  SizedBox(height: 16),
+                  Text('Please log in to edit your profile'),
+                ],
               ),
             );
           }
@@ -368,19 +344,11 @@ class _EditProfileState extends State<EditProfile> {
                 ),
                 
                 _buildTextField(
-                  controller: _countryController,
+                  controller: _addressController,
                   label: 'Address',
                   suffixIcon: Icons.location_on,
                   hintText: 'Enter your address',
-                  onSuffixTap: () {
-                    // TODO: Implement address picker
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Address picker coming soon!'),
-                        backgroundColor: Color(0xFF0A3D62),
-                      ),
-                    );
-                  },
+                  maxLines: 2,
                 ),
                 
                 _buildTextField(
@@ -391,19 +359,6 @@ class _EditProfileState extends State<EditProfile> {
                   hintText: 'Enter your phone number',
                 ),
                 
-                _buildDropdownField(
-                  label: 'Gender',
-                  value: _selectedGender,
-                  items: _genders,
-                  onChanged: (String? newValue) {
-                    if (newValue != null) {
-                      setState(() {
-                        _selectedGender = newValue;
-                      });
-                    }
-                  },
-                ),
-                
                 SizedBox(height: 40),
                 
                 // Update Button
@@ -411,7 +366,7 @@ class _EditProfileState extends State<EditProfile> {
                   width: double.infinity,
                   height: 50,
                   child: ElevatedButton(
-                    onPressed: _updateProfile,
+                    onPressed: _isLoading ? null : _updateProfile,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Color(0xFF0A3D62),
                       shape: RoundedRectangleBorder(
@@ -419,14 +374,19 @@ class _EditProfileState extends State<EditProfile> {
                       ),
                       elevation: 0,
                     ),
-                    child: Text(
-                      'Update Profile',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
-                    ),
+                    child: _isLoading
+                        ? CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2,
+                          )
+                        : Text(
+                            'Update Profile',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
                   ),
                 ),
                 

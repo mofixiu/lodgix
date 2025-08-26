@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:lodgix/providers/booking_provider.dart';
+import 'package:lodgix/providers/bookmark_provider.dart';
 import 'package:lodgix/request.dart' as RequestService;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:provider/provider.dart';
 
 class UserProvider with ChangeNotifier {
   String _username = '';
@@ -13,6 +17,8 @@ class UserProvider with ChangeNotifier {
   String _address = ''; // Add address field
   String _phoneNumber = ''; // Add phone number field
   bool _isInitialized = false;
+  // ignore: unused_field
+  bool _isLoggedIn = false; // Track login state
 
   // Hive box name
   static const String _boxName = 'user_data';
@@ -31,6 +37,7 @@ class UserProvider with ChangeNotifier {
   String get phone_number => _phoneNumber; // Alternative getter for consistency
   bool get isInitialized => _isInitialized;
   bool get hasValidUserData => _username.isNotEmpty && _email.isNotEmpty && _userId != null;
+  bool get isLoggedIn => _token.isNotEmpty; // Getter for login state
 
   // Initialize Hive box
   Future<void> initHive() async {
@@ -271,35 +278,76 @@ class UserProvider with ChangeNotifier {
     }
   }
 
-  bool get isLoggedIn => _token.isNotEmpty;
-
-  Future<void> logout() async {
-    if (!_isInitialized) return;
-    
+  // Add ONLY this method to your existing UserProvider class
+  Future<void> initializeUser() async {
     try {
-      // Clear all stored user data from Hive
-      await _userBox.clear();
+      print('=== INITIALIZING USER FROM STORAGE ===');
       
-      // Clear token from RequestService
-      await RequestService.clearAuthToken();
+      // Try to load from SharedPreferences first
+      final prefs = await SharedPreferences.getInstance();
+      final isLoggedIn = prefs.getBool('is_logged_in') ?? false;
       
-      // Reset in-memory values
-      _username = '';
-      _token = '';
-      _email = '';
-      _userId = null;
-      _profileImagePath = '';
-      _fullName = '';
-      _joinDate = '';
-      _address = '';
-      _phoneNumber = '';
+      print('SharedPreferences check - Is logged in: $isLoggedIn');
       
-      print('User data cleared from Hive');
+      if (isLoggedIn) {
+        _userId = prefs.getInt('user_id');
+        _username = prefs.getString('username') ?? '';
+        _email = prefs.getString('email') ?? '';
+        _fullName = prefs.getString('full_name') ?? '';
+        _token = prefs.getString('token') ?? '';
+        _address = prefs.getString('address') ?? '';
+        _phoneNumber = prefs.getString('phone_number') ?? '';
+        
+        print('Loaded from SharedPreferences:');
+        print('- User ID: $_userId');
+        print('- Full Name: "$_fullName"');
+        print('- Email: "$_email"');
+        print('- Address: "$_address"');
+        print('- Phone: "$_phoneNumber"');
+        
+        // Set auth token for API requests
+        if (_token.isNotEmpty) {
+          await RequestService.setAuthToken(_token);
+        }
+      }
+      
+      // Also try to load from Hive as backup
+      await loadUserData();
+      
+      print('=== USER INITIALIZATION COMPLETE ===');
+      print('Final state:');
+      print('- User ID: $_userId');
+      print('- Full Name: "$_fullName"');
+      print('- Email: "$_email"');
+      print('- Address: "$_address"');
+      print('- Phone: "$_phoneNumber"');
+      print('- Is Logged In: $isLoggedIn');
+      print('=====================================');
+      
       notifyListeners();
     } catch (e) {
-      print('Error clearing user data from Hive: $e');
+      print('Error initializing user: $e');
     }
   }
+
+void _clearUserData() {
+  print('Clearing in-memory user data...');
+  _userId = null;
+  _username = '';
+  _email = '';
+  _fullName = '';
+  _token = '';
+  _address = '';
+  _phoneNumber = '';
+  _profileImagePath = '';
+  _joinDate = '';
+  print('In-memory data cleared');
+}
+
+
+  Future<void> logout() async {
+     await logoutUser();
+ }
 
   // Debug method to print all Hive data
   void debugPrintHiveData() {
@@ -395,5 +443,162 @@ class UserProvider with ChangeNotifier {
     print('Is Logged In: $isLoggedIn');
     print('Join Date: "$_joinDate"');
     print('===========================');
+  }
+
+  // Update your existing loginUser method to save to SharedPreferences
+  Future<void> loginUser({
+    required int userId,
+    required String username,
+    required String email,
+    required String fullName,
+    required String token,
+    String? address,
+    String? phoneNumber,
+  }) async {
+    try {
+      print('=== LOGIN USER DEBUG ===');
+      print('User ID: $userId');
+      print('Username: $username');
+      print('Email: $email');
+      print('Full Name: $fullName');
+      print('Address: $address');
+      print('Phone Number: $phoneNumber');
+      print('Token: ${token.substring(0, 20)}...');
+      print('========================');
+
+      _userId = userId;
+      _username = username;
+      _email = email;
+      _fullName = fullName;
+      _token = token;
+      _address = address ?? '';
+      _phoneNumber = phoneNumber ?? '';
+
+      // Save to both SharedPreferences and Hive
+      await _saveUserData();
+      
+      // Also save to SharedPreferences for immediate access
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('user_id', userId);
+      await prefs.setString('username', username);
+      await prefs.setString('email', email);
+      await prefs.setString('full_name', fullName);
+      await prefs.setString('token', token);
+      await prefs.setString('address', address ?? '');
+      await prefs.setString('phone_number', phoneNumber ?? '');
+      await prefs.setBool('is_logged_in', true);
+
+      print('User data saved to storage');
+      print('Address saved: "${_address}"');
+      print('Phone saved: "${_phoneNumber}"');
+
+      notifyListeners();
+    } catch (e) {
+      print('Error in loginUser: $e');
+      rethrow;
+    }
+  }
+
+  // Update the logoutUser method to be safer:
+
+  Future<void> logoutUser({BuildContext? context}) async {
+    try {
+      print('=== STARTING LOGOUT PROCESS ===');
+      print('Clearing all user data...');
+      
+      // Clear SharedPreferences (this is what splash screen checks)
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.clear();
+      print('✅ SharedPreferences cleared');
+      
+      // Clear RequestService token
+      await RequestService.clearAuthToken();
+      print('✅ RequestService token cleared');
+      
+      // Clear Hive if initialized
+      if (_isInitialized) {
+        try {
+          await _userBox.clear();
+          print('✅ Hive data cleared');
+        } catch (e) {
+          print('Warning: Could not clear Hive data: $e');
+        }
+      }
+      
+      // Clear other providers if context is available - but don't call notifyListeners during logout
+      if (context != null && context.mounted) {
+        try {
+          // Schedule provider clearing for after the current frame
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            try {
+              final bookingProvider = Provider.of<BookingProvider?>(context, listen: false);
+              if (bookingProvider != null) {
+                bookingProvider.clearBookings();
+                print('✅ Booking provider cleared');
+              }
+              
+              final bookmarkProvider = Provider.of<BookmarkProvider?>(context, listen: false);
+              if (bookmarkProvider != null) {
+                bookmarkProvider.clearBookmarks();
+                print('✅ Bookmark provider cleared');
+              }
+            } catch (e) {
+              print('Note: Could not clear providers (this is okay): $e');
+            }
+          });
+        } catch (e) {
+          print('Note: Could not schedule provider clearing: $e');
+        }
+      }
+      
+      // Clear in-memory data
+      _clearUserData();
+      print('✅ In-memory data cleared');
+      
+      print('=== LOGOUT COMPLETED SUCCESSFULLY ===');
+      
+      // Schedule notifyListeners for after the current frame if we're in a build context
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+    } catch (e) {
+      print('❌ Error during logout: $e');
+      // Even if there's an error, clear in-memory data as fallback
+      _clearUserData();
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        notifyListeners();
+      });
+    }
+  }
+
+  // Add this method to help debug the address/phone issue:
+
+  Future<void> debugUserDataLoading() async {
+    print('=== DEBUG USER DATA LOADING ===');
+    
+    // Check SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    print('SharedPreferences data:');
+    print('- Full Name: "${prefs.getString('full_name')}"');
+    print('- Email: "${prefs.getString('email')}"');
+    print('- Address: "${prefs.getString('address')}"');
+    print('- Phone: "${prefs.getString('phone_number')}"');
+    
+    // Check Hive data
+    if (_isInitialized) {
+      print('Hive data:');
+      print('- Full Name: "${_userBox.get('fullName')}"');
+      print('- Email: "${_userBox.get('email')}"');
+      print('- Address: "${_userBox.get('address')}"');
+      print('- Phone: "${_userBox.get('phoneNumber')}"');
+    }
+    
+    // Check current provider state
+    print('Current provider state:');
+    print('- Full Name: "$_fullName"');
+    print('- Email: "$_email"');
+    print('- Address: "$_address"');
+    print('- Phone: "$_phoneNumber"');
+    print('==============================');
   }
 }
