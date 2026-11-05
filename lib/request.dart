@@ -25,8 +25,9 @@ class RequestService {
           log('REQUEST: ${options.method} ${baseUrl}${options.path}');
           log('DATA: ${options.data}');
           
-          // Only add auth token for protected routes (those starting with /api)
-          if (_authToken != null && options.path.startsWith('/api')) {
+          // Send the token whenever we have one; every route the app calls
+          // (/users/..., /guests/...) may need it.
+          if (_authToken != null) {
             options.headers['Authorization'] = 'Bearer $_authToken';
           }
           
