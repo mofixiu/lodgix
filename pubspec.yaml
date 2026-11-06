@@ -45,8 +45,7 @@ dependencies:
   hive_flutter: ^1.1.0
   http: ^1.4.0
   image_picker: ^0.8.7+4
-  intl: ^0.19.0
-  json: ^0.20.4
+  intl: ^0.20.2
   json_serializable: ^6.9.5
   provider: ^6.1.1
   shared_preferences: ^2.0.15
@@ -54,7 +53,7 @@ dependencies:
   step_progress_indicator: ^1.0.2
   timezone: ^0.9.2
   json_annotation: ^4.9.0
-  google_fonts: ^6.2.1
+  google_fonts: ^6.3.3
   geolocator: ^14.0.2
 
 dev_dependencies:
